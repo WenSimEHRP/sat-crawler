@@ -1,6 +1,8 @@
 # SAT Questions Crawler
 
 Simple yet _worksful_ question crawler.
+Fetched data is available in json and cbor formats.
+Use at your own risk.
 
 ## Usage
 
