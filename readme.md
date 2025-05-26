@@ -24,7 +24,7 @@ python3 ./crawl.py
 
 ### Using Nix/NixOS
 
-Use `nix-shell -p` to enter the development environment.
+Use `nix-shell` to enter the development environment.
 
 ```sh
 ./crawl.py
