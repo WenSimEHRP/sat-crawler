@@ -16,6 +16,8 @@ Use at your own risk.
 
 ### UNIX/Linux/MacOS/Windows
 
+For pdf and html appearance consistency, please install the font [`noto-serif`](https://fonts.google.com/noto/specimen/Noto+Serif).
+
 Install dependencies via `pip3 install -r requirements.txt`.
 
 ### Using Nix/NixOS
