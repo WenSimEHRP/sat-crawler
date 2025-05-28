@@ -4,8 +4,8 @@ from typing import Dict, Any, List, Tuple
 
 def load_csv_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Load CSV data files"""
-    reading: pd.DataFrame = pd.read_csv("reading.csv")
-    math: pd.DataFrame = pd.read_csv("math.csv")
+    reading: pd.DataFrame = pd.read_csv("reading.csv", encoding="utf-8")
+    math: pd.DataFrame = pd.read_csv("math.csv", encoding="utf-8")
     return reading, math
 
 

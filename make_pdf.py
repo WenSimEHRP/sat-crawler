@@ -10,13 +10,13 @@ PaperSize = Literal["us-letter", "a4", "legal", "a3"]
 
 def load_questions_data() -> Dict[Any, Any]:
     """Load questions data from JSON file"""
-    with open("questions.json", "r") as f:
+    with open("questions.json", "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def write_html_header(paper_size: PaperSize = "us-letter") -> str:
     """Read HTML header template and update paper size"""
-    with open("header.html", "r") as f:
+    with open("header.html", "r", encoding="utf-8") as f:
         header_content = f.read()
 
     # Replace the @page size with the specified paper size

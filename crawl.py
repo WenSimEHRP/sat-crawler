@@ -162,7 +162,7 @@ def main(debug: bool = False) -> None:
 
     # Save reading section CSV
     filename_suffix: str = "_debug" if debug else ""
-    with open(f"reading{filename_suffix}.csv", "w+", encoding="utf-8") as f:
+    with open(f"reading{filename_suffix}.csv", "w+", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["ID", "Difficulty", "Domain", "Skill"])
         for question in questions_dict.values():
@@ -197,7 +197,7 @@ def main(debug: bool = False) -> None:
     print("Fetched math questions, saving to CSV...")
 
     # Save math section CSV
-    with open(f"math{filename_suffix}.csv", "w+", encoding="utf-8") as f:
+    with open(f"math{filename_suffix}.csv", "w+", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["ID", "Difficulty", "Domain", "Skill"])
         for question in math_questions.values():
