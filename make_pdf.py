@@ -226,32 +226,6 @@ def generate_answer_key_html_content(
     # Update title for answer key
     html_content = html_content.replace("<h1>SAT Questions</h1>", "<h1>SAT Questions - Answer Key & Explanations</h1>")
 
-    # Add additional CSS for answer key styling
-    answer_key_css = """
-        <style>
-            .answer-key {
-                background-color: #e8f5e8;
-                border: 1px solid #4caf50;
-                border-radius: 4px;
-                padding: 8px;
-                margin: 10px 0;
-                font-weight: bold;
-                color: #2e7d32;
-            }
-
-            @media print {
-                .answer-key {
-                    background-color: #f0f0f0;
-                    border: 1px solid #666;
-                    color: black;
-                }
-            }
-        </style>
-    """
-
-    # Insert the CSS before closing head tag
-    html_content = html_content.replace("</head>", f"{answer_key_css}</head>")
-
     for section in ["reading", "math"]:
         for module in [1, 2]:
             question_ids = cached_questions[section][module]

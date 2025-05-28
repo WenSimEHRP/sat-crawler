@@ -200,7 +200,6 @@
                 text-align: justify;
             }
 
-            /* 极度压缩的选项布局 */
             .options {
                 margin-bottom: 5px;
                 padding: 0;
@@ -267,10 +266,28 @@
                 margin: 3px 0;
             }
         }
+        .answer-key {
+            background-color: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 4px;
+            padding: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+
+        @media print {
+            .answer-key {
+                background-color: #f0f0f0;
+                border: 1px solid #666;
+                color: black;
+            }
+        }
     </style>
 </head>
 
 <body>
     <h1>SAT Questions</h1>
 </body>
+
 </html>
