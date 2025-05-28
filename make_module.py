@@ -2,6 +2,7 @@ from collections import defaultdict
 import pandas as pd
 from typing import Dict, Any, List, Tuple
 
+
 def load_csv_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Load CSV data files"""
     reading: pd.DataFrame = pd.read_csv("reading.csv", encoding="utf-8")
@@ -15,23 +16,23 @@ def get_module_config(section: str, module: int) -> Dict[str, Any]:
         ("reading", 1): {
             "total_questions": 27,
             "difficulty_ratios": {"E": 11, "M": 11, "H": 5},
-            "max_skill_count": 3
+            "max_skill_count": 3,
         },
         ("reading", 2): {
             "total_questions": 27,
             "difficulty_ratios": {"E": 7, "M": 10, "H": 10},
-            "max_skill_count": 3
+            "max_skill_count": 3,
         },
         ("math", 1): {
             "total_questions": 22,
             "difficulty_ratios": {"E": 9, "M": 9, "H": 4},
-            "max_skill_count": 1
+            "max_skill_count": 1,
         },
         ("math", 2): {
             "total_questions": 22,
             "difficulty_ratios": {"E": 4, "M": 9, "H": 9},
-            "max_skill_count": 1
-        }
+            "max_skill_count": 1,
+        },
     }
     return configs[(section, module)]
 
@@ -47,7 +48,7 @@ def validate_inputs(section: str, module: int) -> None:
 def select_math_questions_by_skill(
     df: pd.DataFrame,
     difficulty_ratios: Dict[str, int],
-    draw_counts: defaultdict[str, int]
+    draw_counts: defaultdict[str, int],
 ) -> List[str]:
     """Select questions for each skill in math module"""
     q_list: List[str] = []
@@ -75,7 +76,7 @@ def select_additional_math_questions(
     difficulty_ratios: Dict[str, int],
     draw_counts: defaultdict[str, int],
     current_count: int,
-    target_count: int
+    target_count: int,
 ) -> List[str]:
     """Select additional math questions to reach target count"""
     q_list: List[str] = []
@@ -98,7 +99,7 @@ def select_reading_questions(
     df: pd.DataFrame,
     difficulty_ratios: Dict[str, int],
     target_count: int,
-    max_skill_count: int
+    max_skill_count: int,
 ) -> List[str]:
     """Select reading questions"""
     draw_counts: defaultdict[str, int] = defaultdict(int)
@@ -128,7 +129,9 @@ def select_math_questions(df: pd.DataFrame, config: Dict[str, Any]) -> List[str]
     draw_counts: defaultdict[str, int] = defaultdict(int)
 
     # First select one question for each skill
-    q_list: List[str] = select_math_questions_by_skill(df, difficulty_ratios, draw_counts)
+    q_list: List[str] = select_math_questions_by_skill(
+        df, difficulty_ratios, draw_counts
+    )
 
     # Select remaining questions
     additional_questions: List[str] = select_additional_math_questions(
@@ -158,5 +161,5 @@ def make_module(section: str, module: int) -> List[str]:
             reading_df,
             config["difficulty_ratios"],
             config["total_questions"],
-            config["max_skill_count"]
+            config["max_skill_count"],
         )
