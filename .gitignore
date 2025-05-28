@@ -1,2 +1,6 @@
 *.cbor
 *.json
+*.csv
+*.pdf
+questions.html
+__pycache__
