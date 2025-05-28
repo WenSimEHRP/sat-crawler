@@ -36,6 +36,40 @@ def write_html_header(paper_size: PaperSize = "us-letter") -> str:
     return updated_content
 
 
+def get_correct_answer(details: Union[List[Dict[str, Any]], Dict[str, Any]]) -> str:
+    """Extract the correct answer from question details"""
+    if isinstance(details, list) and details:
+        det_0 = details[0]
+        if "answer" in det_0 and "correct" in det_0["answer"]:
+            return det_0["answer"]["correct"]
+    elif isinstance(details, dict):
+        if "correctAnswerOption" in details:
+            return chr(65 + details["correctAnswerOption"])
+        elif "correctAnswer" in details:
+            return details["correctAnswer"]
+        elif "correct_answer" in details:
+            return ", ".join(details["correct_answer"])
+
+    return "<em>N/A; check explanation for more info</em>"
+
+
+def get_answer_explanation(details: Union[List[Dict[str, Any]], Dict[str, Any]]) -> str:
+    """Extract the answer explanation from question details"""
+    if isinstance(details, list) and details:
+        det_0 = details[0]
+        if "rationale" in det_0:
+            return det_0["rationale"]
+        elif "answer" in det_0 and "rationale" in det_0["answer"]:
+            return det_0["answer"]["rationale"]
+    elif isinstance(details, dict):
+        if "rationale" in details:
+            return details["rationale"]
+        elif "explanation" in details:
+            return details["explanation"]
+
+    return "No explanation available."
+
+
 def render_list_type_question(details: List[Dict[str, Any]]) -> str:
     """Render list-type question details"""
     html_content = ""
@@ -99,11 +133,37 @@ def render_question(
     return html_content
 
 
-def generate_section_html(
-    section: str, module: int, questions_dict: Dict[Any, Any]
+def render_answer_key_question(
+    question_id: str, question_num: int, questions_dict: Dict[Any, Any]
 ) -> str:
-    """Generate HTML content for a single section"""
-    question_ids: List[str] = make_module(section, module)
+    """Render a single question with answer and explanation"""
+    question_data = questions_dict.get(question_id, {})
+    details: Union[List[Dict[str, Any]], Dict[str, Any]] = question_data.get("details", {})
+
+    html_content = f'<div class="question"><div class="question-header">Question {question_num}</div>'
+
+    # Render the question content
+    if isinstance(details, list):
+        html_content += render_list_type_question(details)
+    else:
+        html_content += render_dict_type_question(details)
+
+    # Add correct answer
+    correct_answer = get_correct_answer(details)
+    html_content += f'<div class="answer-key"><strong>Correct Answer: {correct_answer}</strong></div>'
+
+    # Add explanation
+    explanation = get_answer_explanation(details)
+    html_content += f'<div class="rationale"><strong>Explanation:</strong> {explanation}</div>'
+
+    html_content += "</div>\n"
+    return html_content
+
+
+def generate_section_html(
+    section: str, module: int, questions_dict: Dict[Any, Any], question_ids: List[str]
+) -> str:
+    """Generate HTML content for a single section using provided question IDs"""
     html_content = f"<h2>{section.capitalize()} Module {module}</h2>\n"
 
     for i, question_id in enumerate(question_ids):
@@ -113,13 +173,89 @@ def generate_section_html(
     return html_content
 
 
+def generate_answer_key_section_html(
+    section: str, module: int, questions_dict: Dict[Any, Any], question_ids: List[str]
+) -> str:
+    """Generate answer key HTML content for a single section using provided question IDs"""
+    html_content = f"<h2>{section.capitalize()} Module {module} - Answer Key</h2>\n"
+
+    for i, question_id in enumerate(question_ids):
+        print(f"Answer key: {section.capitalize()} section module {module} question {i + 1}: {question_id}")
+        html_content += render_answer_key_question(question_id, i + 1, questions_dict)
+
+    return html_content
+
+
+def generate_questions_and_keys(questions_dict: Dict[Any, Any]) -> Dict[str, Dict[int, List[str]]]:
+    """Generate and cache question IDs for each section and module"""
+    cached_questions = {}
+
+    for section in ["reading", "math"]:
+        cached_questions[section] = {}
+        for module in [1, 2]:
+            question_ids = make_module(section, module)
+            cached_questions[section][module] = question_ids
+
+    return cached_questions
+
+
 def generate_html_content(questions_dict: Dict[Any, Any], paper_size: PaperSize = "us-letter") -> str:
-    """Generate complete HTML content"""
+    """Generate complete HTML content for questions only"""
     html_content = write_html_header(paper_size)
+
+    # Generate and cache question IDs
+    cached_questions = generate_questions_and_keys(questions_dict)
 
     for section in ["reading", "math"]:
         for module in [1, 2]:
-            html_content += generate_section_html(section, module, questions_dict)
+            question_ids = cached_questions[section][module]
+            html_content += generate_section_html(section, module, questions_dict, question_ids)
+
+    html_content += "</body>\n</html>"
+    return html_content, cached_questions
+
+
+def generate_answer_key_html_content(
+    questions_dict: Dict[Any, Any],
+    cached_questions: Dict[str, Dict[int, List[str]]],
+    paper_size: PaperSize = "us-letter"
+) -> str:
+    """Generate complete HTML content for answer key with explanations using cached question IDs"""
+    html_content = write_html_header(paper_size)
+
+    # Update title for answer key
+    html_content = html_content.replace("<h1>SAT Questions</h1>", "<h1>SAT Questions - Answer Key & Explanations</h1>")
+
+    # Add additional CSS for answer key styling
+    answer_key_css = """
+        <style>
+            .answer-key {
+                background-color: #e8f5e8;
+                border: 1px solid #4caf50;
+                border-radius: 4px;
+                padding: 8px;
+                margin: 10px 0;
+                font-weight: bold;
+                color: #2e7d32;
+            }
+
+            @media print {
+                .answer-key {
+                    background-color: #f0f0f0;
+                    border: 1px solid #666;
+                    color: black;
+                }
+            }
+        </style>
+    """
+
+    # Insert the CSS before closing head tag
+    html_content = html_content.replace("</head>", f"{answer_key_css}</head>")
+
+    for section in ["reading", "math"]:
+        for module in [1, 2]:
+            question_ids = cached_questions[section][module]
+            html_content += generate_answer_key_section_html(section, module, questions_dict, question_ids)
 
     html_content += "</body>\n</html>"
     return html_content
@@ -163,6 +299,16 @@ def main() -> None:
         default="questions",
         help="Output filename prefix (default: questions)"
     )
+    parser.add_argument(
+        "--answers-only",
+        action="store_true",
+        help="Generate only the answer key PDF"
+    )
+    parser.add_argument(
+        "--no-answers",
+        action="store_true",
+        help="Generate only the questions PDF (no answer key)"
+    )
 
     args = parser.parse_args()
 
@@ -170,25 +316,44 @@ def main() -> None:
     paper_size: PaperSize = validate_paper_size(args.paper_size)
 
     # Generate filenames
-    html_filename = f"{args.output}.html"
-    pdf_filename = f"{args.output}.pdf"
+    questions_html_filename = f"{args.output}.html"
+    questions_pdf_filename = f"{args.output}.pdf"
+    answers_html_filename = f"{args.output}_answers.html"
+    answers_pdf_filename = f"{args.output}_answers.pdf"
 
     print(f"Paper size: {paper_size}")
-    print(f"Output files: {html_filename}, {pdf_filename}")
 
     # Load questions data
     questions_dict: Dict[Any, Any] = load_questions_data()
 
-    # Generate HTML content with specified paper size
-    html_content: str = generate_html_content(questions_dict, paper_size)
+    # Generate questions first to cache the question IDs
+    cached_questions = None
 
-    # Write HTML file
-    write_html_file(html_content, html_filename)
+    if not args.answers_only:
+        # Generate questions PDF
+        print(f"Generating questions: {questions_html_filename}, {questions_pdf_filename}")
 
-    # Generate PDF
-    generate_pdf(html_filename, pdf_filename)
+        questions_html_content, cached_questions = generate_html_content(questions_dict, paper_size)
+        write_html_file(questions_html_content, questions_html_filename)
+        generate_pdf(questions_html_filename, questions_pdf_filename)
 
-    print("HTML and PDF files generated successfully!")
+        print("Questions PDF generated successfully!")
+
+    if not args.no_answers:
+        # If we didn't generate questions, we still need to cache the question IDs
+        if cached_questions is None:
+            cached_questions = generate_questions_and_keys(questions_dict)
+
+        # Generate answer key PDF using the same question IDs
+        print(f"Generating answer key: {answers_html_filename}, {answers_pdf_filename}")
+
+        answers_html_content = generate_answer_key_html_content(questions_dict, cached_questions, paper_size)
+        write_html_file(answers_html_content, answers_html_filename)
+        generate_pdf(answers_html_filename, answers_pdf_filename)
+
+        print("Answer key PDF generated successfully!")
+
+    print("All files generated successfully!")
 
 
 if __name__ == "__main__":
