@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
-# import beautifulsoup4
 import requests
-from typing import Final, List, Dict, Any, Optional
-from dataclasses import dataclass
+from typing import Final, List, Dict, Any, Optional, Tuple, Union
 import tqdm
-# enum
+import concurrent.futures
+import json
+import csv
+import argparse
 
-headers: Final = {
+# Strong type definitions
+HeadersType = Dict[str, str]
+QuestionDataType = Dict[str, Any]
+QuestionsDict = Dict[str, Dict[str, Any]]
+ExternalIdTaskResult = Tuple[str, Dict[str, Any]]
+IBNTaskResult = Optional[requests.Response]
+
+headers: Final[HeadersType] = {
     "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:138.0) Gecko/20100101 Firefox/138.0",
     "Accept": "application/json, text/plain, */*",
     "Accept-Language": "en-US,en;q=0.5",
-    # 'Accept-Encoding': 'gzip, deflate, br, zstd',
     "Content-Type": "application/json",
     "Origin": "https://satsuitequestionbank.collegeboard.org",
     "Connection": "keep-alive",
@@ -18,108 +25,209 @@ headers: Final = {
     "Sec-Fetch-Dest": "empty",
     "Sec-Fetch-Mode": "cors",
     "Sec-Fetch-Site": "same-site",
-    # Requests doesn't support trailers
-    # 'TE': 'trailers',
 }
 
+# Create a global session object
+session: requests.Session = requests.Session()
+session.headers.update(headers)
 
-@dataclass
-class Question:
-    update_date: Optional[int]
-    p_pcc: Optional[str]
-    question_id: Optional[str]
-    skill_cd: Optional[str]
-    score_band_range_cd: Optional[int]
-    u_id: Optional[str]
-    skill_desc: Optional[str]
-    create_date: Optional[int]
-    program: Optional[str]
-    primary_class_cd_desc: Optional[str]
-    ibn: Optional[str]
-    external_id: Optional[str]
-    primary_class_cd: Optional[str]
-    difficulty: Optional[str]
-    rationale: Optional[str] = None
-    stem: Optional[str] = None
-    stimulus: Optional[str] = None
-    answer_options: Optional[List[Dict[str, Any]]] = None
-    correct_answer: Optional[List[str]] = None
 
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Question":
-        c = cls(
-            update_date=data.get("updateDate"),
-            p_pcc=data.get("pPcc"),
-            question_id=data.get("questionId"),
-            skill_cd=data.get("skill_cd"),
-            score_band_range_cd=data.get("score_band_range_cd"),
-            u_id=data.get("uId"),
-            skill_desc=data.get("skill_desc"),
-            create_date=data.get("createDate"),
-            program=data.get("program"),
-            primary_class_cd_desc=data.get("primary_class_cd_desc"),
-            ibn=data.get("ibn"),
-            external_id=data.get("external_id"),
-            primary_class_cd=data.get("primary_class_cd"),
-            difficulty=data.get("difficulty"),
+def get_question_details(external_id: str) -> ExternalIdTaskResult:
+    """Get detailed information for a single question"""
+    response: requests.Response = session.post(
+        "https://qbank-api.collegeboard.org/msreportingquestionbank-prod/questionbank/digital/get-question",
+        json={"external_id": external_id},
+    )
+    return external_id, response.json()
+
+
+def get_question_details_ibn(ibn: str) -> IBNTaskResult:
+    """Get detailed information for ibn type questions"""
+    if ibn:
+        response: requests.Response = session.get(
+            f"https://saic.collegeboard.org/disclosed/{ibn}.json"
         )
+        return response
+    return None
 
-        # complete the rest of the fields
-        if "external_id" in data:
-            response = requests.post(
-                "https://qbank-api.collegeboard.org/msreportingquestionbank-prod/questionbank/digital/get-question",
-                headers=headers,
-                json={"external_id": data["external_id"]},
+
+def process_data(data: List[QuestionDataType], debug: bool = False) -> QuestionsDict:
+    """Process data in parallel"""
+    # If in debug mode, only process the first 100 questions
+    if debug:
+        data = data[:100]
+        print(f"Debug mode: Processing only {len(data)} questions")
+
+    # Collect two types of tasks separately
+    external_id_tasks: List[str] = []
+    ibn_tasks: List[str] = []
+
+    for item in data:
+        ibn: Optional[str] = item.get("ibn")
+        external_id: Optional[str] = item.get("external_id")
+
+        if (ibn is None or ibn == "") and external_id:
+            external_id_tasks.append(external_id)
+        elif ibn and ibn != "":
+            ibn_tasks.append(ibn)
+
+    details_dict: Dict[str, Dict[str, Any]] = {}
+    questions_dict: QuestionsDict = {}
+
+    # Use thread pool to fetch details in parallel
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+        futures: Dict[concurrent.futures.Future[Any], Tuple[str, str]] = {}
+
+        # Submit external_id tasks
+        for external_id in external_id_tasks:
+            future: concurrent.futures.Future[ExternalIdTaskResult] = executor.submit(get_question_details, external_id)
+            futures[future] = ("external_id", external_id)
+
+        # Submit ibn tasks
+        for ibn in ibn_tasks:
+            future_ibn: concurrent.futures.Future[IBNTaskResult] = executor.submit(get_question_details_ibn, ibn)
+            futures[future_ibn] = ("ibn", ibn)
+
+        # Show progress bar
+        for future in tqdm.tqdm(
+            concurrent.futures.as_completed(futures),
+            total=len(futures),
+            desc="Fetching details",
+        ):
+            try:
+                task_type: str
+                task_id: str
+                task_type, task_id = futures[future]
+
+                if task_type == "external_id":
+                    result: ExternalIdTaskResult = future.result()
+                    external_id_result: str
+                    details: Dict[str, Any]
+                    external_id_result, details = result
+                    details_dict[external_id_result] = details
+                elif task_type == "ibn":
+                    response: Union[IBNTaskResult, Any] = future.result()
+                    if response and response.status_code == 200:
+                        details_dict[task_id] = response.json()
+                    else:
+                        print(f"Failed to fetch ibn details for {task_id}")
+
+            except Exception as e:
+                print(f"Error fetching details for {futures[future]}: {e}")
+
+    # Process all questions - simple merge of raw JSON
+    for item in data:
+        external_id: Optional[str] = item.get("external_id")
+        ibn: Optional[str] = item.get("ibn")
+        question_id: Optional[str] = item.get("questionId")
+
+        if not question_id:
+            continue
+
+        # Create complete question data
+        full_question: Dict[str, Any] = {
+            "basic_info": item,  # Raw basic information
+            "details": None      # Detailed information
+        }
+
+        # Get corresponding details based on type
+        if (ibn is None or len(ibn) == 0) and external_id:
+            full_question["details"] = details_dict.get(external_id)
+        elif ibn:
+            full_question["details"] = details_dict.get(ibn)
+
+        questions_dict[question_id] = full_question
+
+    return questions_dict
+
+
+def main(debug: bool = False) -> None:
+    """Main function"""
+    # Get reading section questions
+    print("Fetching reading questions...")
+    response: requests.Response = session.post(
+        "https://qbank-api.collegeboard.org/msreportingquestionbank-prod/questionbank/digital/get-questions",
+        json={
+            "asmtEventId": 99,
+            "test": 1,
+            "domain": "INI,CAS,EOI,SEC",
+        },
+    )
+
+    print(f"Reading API response status: {response.status_code}")
+    data: List[QuestionDataType] = response.json()
+    questions_dict: QuestionsDict = process_data(data, debug)
+
+    print("Fetched reading questions, saving to CSV...")
+
+    # Save reading section CSV
+    filename_suffix: str = "_debug" if debug else ""
+    with open(f"reading{filename_suffix}.csv", "w+", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["ID", "Difficulty", "Domain", "Skill"])
+        for question in questions_dict.values():
+            basic_info = question["basic_info"]
+            writer.writerow(
+                [
+                    basic_info.get("questionId"),
+                    basic_info.get("difficulty"),
+                    basic_info.get("primary_class_cd_desc"),
+                    basic_info.get("skill_desc"),
+                ]
             )
-            # print(response.status_code)
-            # print(response.text)
-            json_data = response.json()
-            c.rationale = json_data.get("rationale")
-            c.stem = json_data.get("stem")
-            c.stimulus = json_data.get("stimulus")
-            c.answer_options = json_data.get("answerOptions")
-            c.correct_answer = json_data.get("correct_answer")
 
-        return c
+    # Get math section questions
+    print("Fetching math questions...")
+    response = session.post(
+        "https://qbank-api.collegeboard.org/msreportingquestionbank-prod/questionbank/digital/get-questions",
+        json={
+            "asmtEventId": 99,
+            "test": 2,
+            "domain": "H,P,Q,S",
+        },
+    )
+
+    print(f"Math API response status: {response.status_code}")
+    data = response.json()
+    math_questions: QuestionsDict = process_data(data, debug)
+
+    # Merge both sections
+    questions_dict.update(math_questions)
+
+    print("Fetched math questions, saving to CSV...")
+
+    # Save math section CSV
+    with open(f"math{filename_suffix}.csv", "w+", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["ID", "Difficulty", "Domain", "Skill"])
+        for question in math_questions.values():
+            basic_info = question["basic_info"]
+            writer.writerow(
+                [
+                    basic_info.get("questionId"),
+                    basic_info.get("difficulty"),
+                    basic_info.get("primary_class_cd_desc"),
+                    basic_info.get("skill_desc"),
+                ]
+            )
+
+    # Save all questions to JSON
+    print("Saving all questions to JSON...")
+    with open(f"questions{filename_suffix}.json", "w+", encoding="utf-8") as f:
+        json.dump(questions_dict, f, indent=4, ensure_ascii=False)
+
+    print(f"Saved questions to questions{filename_suffix}.json")
+    print(f"Total questions processed: {len(questions_dict)}")
+    print("Done!")
 
 
-json_data: Dict[str, Any] = {
-    "asmtEventId": 99,
-    "test": 1,
-    "domain": "INI,CAS,EOI,SEC",
-}
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="SAT Question Crawler")
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Debug mode: only fetch 100 questions per section"
+    )
 
-response = requests.post(
-    "https://qbank-api.collegeboard.org/msreportingquestionbank-prod/questionbank/digital/get-questions",
-    headers=headers,
-    json=json_data,
-)
-
-# print(response.status_code)
-# convert response to dict
-data: List[Dict[str, Any]] = response.json()
-# create a new file named index.json
-questions_list: List[Dict[Any, Any]] = []
-
-for item in tqdm.tqdm(data, desc="Processing Questions"):
-    question = Question.from_dict(item)
-    questions_list.append(question.__dict__)
-
-print("Fetched all questions, saving to files...")
-
-with open("questions.cbor", "wb") as f:
-    import cbor2
-
-    cbor2.dump(questions_list, f)
-
-print(
-    "Saved questions to questions.cbor. CBOR format is more compact than JSON and is faster to read/write."
-)
-
-with open("questions.json", "w+") as f:
-    import json
-
-    json.dump(questions_list, f, indent=4)
-
-print("Saved questions to questions.json")
-print("Done!")
+    args = parser.parse_args()
+    main(debug=args.debug)
