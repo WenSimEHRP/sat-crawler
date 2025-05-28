@@ -8,7 +8,7 @@ Use at your own risk.
 
 - Fetching questions: `crawl.py`
 - Randomly select questions & make html/pdf output: `make_pdf.py`
-  - Specify paper size using `--paper-size`
+  - Specify paper size using `--paper-size`. This by default uses us-letter.
   - Specify output file name using `--output`
   - Example: `./make_pdf.py --paper-size letter --output questions`
 
