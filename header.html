@@ -102,6 +102,20 @@
             text-align: justify;
         }
 
+        /* Hide screen reader only elements */
+        .sr-only {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+            display: none !important;
+        }
+
         @media print {
             body {
                 font-family: "Noto Serif", serif;
@@ -234,12 +248,16 @@
                 height: auto;
             }
 
+            /* Hide screen reader only elements in print too */
+            .sr-only {
+                display: none !important;
+            }
+
             @page {
                 margin: 0.8cm;
                 size: A4;
             }
 
-            /* 进一步压缩间距 */
             p {
                 margin: 4px 0;
                 text-align: justify;
@@ -254,3 +272,5 @@
 
 <body>
     <h1>SAT Questions</h1>
+</body>
+</html>
