@@ -6,26 +6,15 @@ Use at your own risk.
 
 ## Usage
 
-### UNIX/Linux/MacOS
+- Fetching questions: `crawl.py`
+- Randomly select questions & make html/pdf output: `make_pdf.py`
+
+## Installing Dependencies
+
+### UNIX/Linux/MacOS/Windows
 
 Install dependencies via `pip3 install -r requirements.txt`.
-
-```sh
-./crawl.py
-```
-
-### Windows
-
-Install dependencies via `pip3 install -r requirements.txt`.
-
-```sh
-python3 ./crawl.py
-```
 
 ### Using Nix/NixOS
 
 Use `nix-shell` to enter the development environment.
-
-```sh
-./crawl.py
-```
