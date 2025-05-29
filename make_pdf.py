@@ -8,6 +8,7 @@ from make_module import make_module
 # Paper size type definition
 PaperSize = Literal["us-letter", "a4", "legal", "a3"]
 
+
 def load_questions_data() -> Dict[Any, Any]:
     """Load questions data from JSON file"""
     with open("questions.json", "r", encoding="utf-8") as f:
@@ -20,17 +21,11 @@ def write_html_header(paper_size: PaperSize = "us-letter") -> str:
         header_content = f.read()
 
     # Replace the @page size with the specified paper size
-    size_mapping = {
-        "us-letter": "letter",
-        "a4": "A4",
-        "legal": "legal",
-        "a3": "A3"
-    }
+    size_mapping = {"us-letter": "letter", "a4": "A4", "legal": "legal", "a3": "A3"}
 
     # Update the @page rule with the correct paper size
     updated_content = header_content.replace(
-        "size: A4;",
-        f"size: {size_mapping[paper_size]};"
+        "size: A4;", f"size: {size_mapping[paper_size]};"
     )
 
     return updated_content
@@ -89,7 +84,7 @@ def render_list_type_question(details: List[Dict[str, Any]]) -> str:
             html_content += '<ul class="options">'
             for k, v in det_0["answer"]["choices"].items():
                 html_content += f'<li class="option"><span class="option-letter">{k.upper()}</span><span class="option-content">{v["body"]}</span></li>'
-            html_content += '</ul>'
+            html_content += "</ul>"
 
     return html_content
 
@@ -138,7 +133,9 @@ def render_answer_key_question(
 ) -> str:
     """Render a single question with answer and explanation"""
     question_data = questions_dict.get(question_id, {})
-    details: Union[List[Dict[str, Any]], Dict[str, Any]] = question_data.get("details", {})
+    details: Union[List[Dict[str, Any]], Dict[str, Any]] = question_data.get(
+        "details", {}
+    )
 
     html_content = f'<div class="question"><div class="question-header">Question {question_num}</div>'
 
@@ -154,7 +151,9 @@ def render_answer_key_question(
 
     # Add explanation
     explanation = get_answer_explanation(details)
-    html_content += f'<div class="rationale"><strong>Explanation:</strong> {explanation}</div>'
+    html_content += (
+        f'<div class="rationale"><strong>Explanation:</strong> {explanation}</div>'
+    )
 
     html_content += "</div>\n"
     return html_content
@@ -167,7 +166,9 @@ def generate_section_html(
     html_content = f"<h2>{section.capitalize()} Module {module}</h2>\n"
 
     for i, question_id in enumerate(question_ids):
-        print(f"{section.capitalize()} section module {module} question {i + 1}: {question_id}")
+        print(
+            f"{section.capitalize()} section module {module} question {i + 1}: {question_id}"
+        )
         html_content += render_question(question_id, i + 1, questions_dict)
 
     return html_content
@@ -180,13 +181,17 @@ def generate_answer_key_section_html(
     html_content = f"<h2>{section.capitalize()} Module {module} - Answer Key</h2>\n"
 
     for i, question_id in enumerate(question_ids):
-        print(f"Answer key: {section.capitalize()} section module {module} question {i + 1}: {question_id}")
+        print(
+            f"Answer key: {section.capitalize()} section module {module} question {i + 1}: {question_id}"
+        )
         html_content += render_answer_key_question(question_id, i + 1, questions_dict)
 
     return html_content
 
 
-def generate_questions_and_keys(questions_dict: Dict[Any, Any]) -> Dict[str, Dict[int, List[str]]]:
+def generate_questions_and_keys(
+    questions_dict: Dict[Any, Any],
+) -> Dict[str, Dict[int, List[str]]]:
     """Generate and cache question IDs for each section and module"""
     cached_questions = {}
 
@@ -199,7 +204,9 @@ def generate_questions_and_keys(questions_dict: Dict[Any, Any]) -> Dict[str, Dic
     return cached_questions
 
 
-def generate_html_content(questions_dict: Dict[Any, Any], paper_size: PaperSize = "us-letter") -> str:
+def generate_html_content(
+    questions_dict: Dict[Any, Any], paper_size: PaperSize = "us-letter"
+) -> str:
     """Generate complete HTML content for questions only"""
     html_content = write_html_header(paper_size)
 
@@ -209,7 +216,9 @@ def generate_html_content(questions_dict: Dict[Any, Any], paper_size: PaperSize 
     for section in ["reading", "math"]:
         for module in [1, 2]:
             question_ids = cached_questions[section][module]
-            html_content += generate_section_html(section, module, questions_dict, question_ids)
+            html_content += generate_section_html(
+                section, module, questions_dict, question_ids
+            )
 
     html_content += "</body>\n</html>"
     return html_content, cached_questions
@@ -218,18 +227,22 @@ def generate_html_content(questions_dict: Dict[Any, Any], paper_size: PaperSize 
 def generate_answer_key_html_content(
     questions_dict: Dict[Any, Any],
     cached_questions: Dict[str, Dict[int, List[str]]],
-    paper_size: PaperSize = "us-letter"
+    paper_size: PaperSize = "us-letter",
 ) -> str:
     """Generate complete HTML content for answer key with explanations using cached question IDs"""
     html_content = write_html_header(paper_size)
 
     # Update title for answer key
-    html_content = html_content.replace("<h1>SAT Questions</h1>", "<h1>SAT Questions - Answer Key & Explanations</h1>")
+    html_content = html_content.replace(
+        "<h1>SAT Questions</h1>", "<h1>SAT Questions - Answer Key & Explanations</h1>"
+    )
 
     for section in ["reading", "math"]:
         for module in [1, 2]:
             question_ids = cached_questions[section][module]
-            html_content += generate_answer_key_section_html(section, module, questions_dict, question_ids)
+            html_content += generate_answer_key_section_html(
+                section, module, questions_dict, question_ids
+            )
 
     html_content += "</body>\n</html>"
     return html_content
@@ -242,8 +255,7 @@ def write_html_file(html_content: str, filename: str = "questions.html") -> None
 
 
 def generate_pdf(
-    html_filename: str = "questions.html",
-    pdf_filename: str = "questions.pdf"
+    html_filename: str = "questions.html", pdf_filename: str = "questions.pdf"
 ) -> None:
     """Generate PDF from HTML content"""
     weasyprint.HTML(html_filename).write_pdf(pdf_filename)
@@ -253,49 +265,30 @@ def validate_paper_size(paper_size: str) -> PaperSize:
     """Validate and return paper size"""
     valid_sizes: List[PaperSize] = ["us-letter", "a4", "legal", "a3"]
     if paper_size not in valid_sizes:
-        raise ValueError(f"Invalid paper size. Must be one of: {', '.join(valid_sizes)}")
+        raise ValueError(
+            f"Invalid paper size. Must be one of: {', '.join(valid_sizes)}"
+        )
     return paper_size  # type: ignore
 
 
-def main() -> None:
+def main(
+    paper_size: str = "us-letter",
+    output: str = "questions",
+    answers_only: bool = False,
+    no_answers: bool = False,
+) -> None:
     """Main function to generate HTML and PDF files"""
-    parser = argparse.ArgumentParser(description="Generate SAT Questions PDF")
-    parser.add_argument(
-        "--paper-size",
-        type=str,
-        default="us-letter",
-        choices=["us-letter", "a4", "legal", "a3"],
-        help="Paper size for PDF generation (default: us-letter)"
-    )
-    parser.add_argument(
-        "--output",
-        type=str,
-        default="questions",
-        help="Output filename prefix (default: questions)"
-    )
-    parser.add_argument(
-        "--answers-only",
-        action="store_true",
-        help="Generate only the answer key PDF"
-    )
-    parser.add_argument(
-        "--no-answers",
-        action="store_true",
-        help="Generate only the questions PDF (no answer key)"
-    )
-
-    args = parser.parse_args()
 
     # Validate paper size
-    paper_size: PaperSize = validate_paper_size(args.paper_size)
+    validated_paper_size: PaperSize = validate_paper_size(paper_size)
 
     # Generate filenames
-    questions_html_filename = f"{args.output}.html"
-    questions_pdf_filename = f"{args.output}.pdf"
-    answers_html_filename = f"{args.output}_answers.html"
-    answers_pdf_filename = f"{args.output}_answers.pdf"
+    questions_html_filename = f"{output}.html"
+    questions_pdf_filename = f"{output}.pdf"
+    answers_html_filename = f"{output}_answers.html"
+    answers_pdf_filename = f"{output}_answers.pdf"
 
-    print(f"Paper size: {paper_size}")
+    print(f"Paper size: {validated_paper_size}")
 
     # Load questions data
     questions_dict: Dict[Any, Any] = load_questions_data()
@@ -303,17 +296,21 @@ def main() -> None:
     # Generate questions first to cache the question IDs
     cached_questions = None
 
-    if not args.answers_only:
+    if not answers_only:
         # Generate questions PDF
-        print(f"Generating questions: {questions_html_filename}, {questions_pdf_filename}")
+        print(
+            f"Generating questions: {questions_html_filename}, {questions_pdf_filename}"
+        )
 
-        questions_html_content, cached_questions = generate_html_content(questions_dict, paper_size)
+        questions_html_content, cached_questions = generate_html_content(
+            questions_dict, validated_paper_size
+        )
         write_html_file(questions_html_content, questions_html_filename)
         generate_pdf(questions_html_filename, questions_pdf_filename)
 
         print("Questions PDF generated successfully!")
 
-    if not args.no_answers:
+    if not no_answers:
         # If we didn't generate questions, we still need to cache the question IDs
         if cached_questions is None:
             cached_questions = generate_questions_and_keys(questions_dict)
@@ -321,7 +318,9 @@ def main() -> None:
         # Generate answer key PDF using the same question IDs
         print(f"Generating answer key: {answers_html_filename}, {answers_pdf_filename}")
 
-        answers_html_content = generate_answer_key_html_content(questions_dict, cached_questions, paper_size)
+        answers_html_content = generate_answer_key_html_content(
+            questions_dict, cached_questions, validated_paper_size
+        )
         write_html_file(answers_html_content, answers_html_filename)
         generate_pdf(answers_html_filename, answers_pdf_filename)
 
@@ -330,5 +329,41 @@ def main() -> None:
     print("All files generated successfully!")
 
 
+def cli_main() -> None:
+    """CLI entry point that parses arguments and calls main()"""
+    parser = argparse.ArgumentParser(description="Generate SAT Questions PDF")
+    parser.add_argument(
+        "--paper-size",
+        type=str,
+        default="us-letter",
+        choices=["us-letter", "a4", "legal", "a3"],
+        help="Paper size for PDF generation (default: us-letter)",
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        default="questions",
+        help="Output filename prefix (default: questions)",
+    )
+    parser.add_argument(
+        "--answers-only", action="store_true", help="Generate only the answer key PDF"
+    )
+    parser.add_argument(
+        "--no-answers",
+        action="store_true",
+        help="Generate only the questions PDF (no answer key)",
+    )
+
+    args = parser.parse_args()
+
+    # Call main with parsed arguments
+    main(
+        paper_size=args.paper_size,
+        output=args.output,
+        answers_only=args.answers_only,
+        no_answers=args.no_answers,
+    )
+
+
 if __name__ == "__main__":
-    main()
+    cli_main()
