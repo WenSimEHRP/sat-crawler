@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Any, Union, List, Dict, Literal
+from typing import Any, Union, List, Dict, Literal, Optional
 import json
 import weasyprint
 import argparse
@@ -190,7 +190,7 @@ def generate_questions_and_keys(
     questions_dict: Dict[Any, Any],
 ) -> Dict[str, Dict[int, List[str]]]:
     """Generate and cache question IDs for each section and module"""
-    cached_questions = {}
+    cached_questions: Dict[str, Dict[int, List[str]]] = {}
 
     for section in ["reading", "math"]:
         cached_questions[section] = {}
@@ -202,13 +202,12 @@ def generate_questions_and_keys(
 
 
 def generate_html_content(
-    questions_dict: Dict[Any, Any], paper_size: PaperSize = "us-letter"
+    questions_dict: Dict[Any, Any],
+    cached_questions: Dict[str, Dict[int, List[str]]],
+    paper_size: PaperSize = "us-letter",
 ) -> str:
     """Generate complete HTML content for questions only"""
     template = load_template()
-
-    # Generate and cache question IDs
-    cached_questions = generate_questions_and_keys(questions_dict)
 
     content = ""
     for section in ["reading", "math"]:
@@ -221,10 +220,10 @@ def generate_html_content(
     html_content = template.substitute(
         paper_size=get_paper_size_value(paper_size),
         document_title="SAT Questions",
-        content=content
+        content=content,
     )
 
-    return html_content, cached_questions
+    return html_content
 
 
 def generate_answer_key_html_content(
@@ -246,7 +245,7 @@ def generate_answer_key_html_content(
     html_content = template.substitute(
         paper_size=get_paper_size_value(paper_size),
         document_title="SAT Questions - Answer Key & Explanations",
-        content=content
+        content=content,
     )
 
     return html_content
@@ -280,6 +279,7 @@ def main(
     output: str = "questions",
     answers_only: bool = False,
     no_answers: bool = False,
+    questions: Optional[Dict[str, Dict[int, List[str]]]] = None,
 ) -> None:
     """Main function to generate HTML and PDF files"""
 
@@ -297,8 +297,11 @@ def main(
     # Load questions data
     questions_dict: Dict[Any, Any] = load_questions_data()
 
-    # Generate questions first to cache the question IDs
-    cached_questions = None
+    # Generate and cache question IDs
+    if questions is None:
+        cached_questions = generate_questions_and_keys(questions_dict)
+    else:
+        cached_questions = questions
 
     if not answers_only:
         # Generate questions PDF
@@ -306,8 +309,8 @@ def main(
             f"Generating questions: {questions_html_filename}, {questions_pdf_filename}"
         )
 
-        questions_html_content, cached_questions = generate_html_content(
-            questions_dict, validated_paper_size
+        questions_html_content = generate_html_content(
+            questions_dict, cached_questions, validated_paper_size
         )
         write_html_file(questions_html_content, questions_html_filename)
         generate_pdf(questions_html_filename, questions_pdf_filename)
@@ -315,10 +318,6 @@ def main(
         print("Questions PDF generated successfully!")
 
     if not no_answers:
-        # If we didn't generate questions, we still need to cache the question IDs
-        if cached_questions is None:
-            cached_questions = generate_questions_and_keys(questions_dict)
-
         # Generate answer key PDF using the same question IDs
         print(f"Generating answer key: {answers_html_filename}, {answers_pdf_filename}")
 
