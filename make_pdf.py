@@ -4,6 +4,7 @@ import json
 import weasyprint
 import argparse
 from make_module import make_module
+from string import Template
 
 # Paper size type definition
 PaperSize = Literal["us-letter", "a4", "legal", "a3"]
@@ -15,20 +16,16 @@ def load_questions_data() -> Dict[Any, Any]:
         return json.load(f)
 
 
-def write_html_header(paper_size: PaperSize = "us-letter") -> str:
-    """Read HTML header template and update paper size"""
-    with open("header.html", "r", encoding="utf-8") as f:
-        header_content = f.read()
+def load_template() -> Template:
+    """Load the main HTML template"""
+    with open("template.html", "r", encoding="utf-8") as f:
+        return Template(f.read())
 
-    # Replace the @page size with the specified paper size
+
+def get_paper_size_value(paper_size: PaperSize) -> str:
+    """Get CSS paper size value"""
     size_mapping = {"us-letter": "letter", "a4": "A4", "legal": "legal", "a3": "A3"}
-
-    # Update the @page rule with the correct paper size
-    updated_content = header_content.replace(
-        "size: A4;", f"size: {size_mapping[paper_size]};"
-    )
-
-    return updated_content
+    return size_mapping[paper_size]
 
 
 def get_correct_answer(details: Union[List[Dict[str, Any]], Dict[str, Any]]) -> str:
@@ -208,19 +205,25 @@ def generate_html_content(
     questions_dict: Dict[Any, Any], paper_size: PaperSize = "us-letter"
 ) -> str:
     """Generate complete HTML content for questions only"""
-    html_content = write_html_header(paper_size)
+    template = load_template()
 
     # Generate and cache question IDs
     cached_questions = generate_questions_and_keys(questions_dict)
 
+    content = ""
     for section in ["reading", "math"]:
         for module in [1, 2]:
             question_ids = cached_questions[section][module]
-            html_content += generate_section_html(
+            content += generate_section_html(
                 section, module, questions_dict, question_ids
             )
 
-    html_content += "</body>\n</html>"
+    html_content = template.substitute(
+        paper_size=get_paper_size_value(paper_size),
+        document_title="SAT Questions",
+        content=content
+    )
+
     return html_content, cached_questions
 
 
@@ -230,21 +233,22 @@ def generate_answer_key_html_content(
     paper_size: PaperSize = "us-letter",
 ) -> str:
     """Generate complete HTML content for answer key with explanations using cached question IDs"""
-    html_content = write_html_header(paper_size)
+    template = load_template()
 
-    # Update title for answer key
-    html_content = html_content.replace(
-        "<h1>SAT Questions</h1>", "<h1>SAT Questions - Answer Key & Explanations</h1>"
-    )
-
+    content = ""
     for section in ["reading", "math"]:
         for module in [1, 2]:
             question_ids = cached_questions[section][module]
-            html_content += generate_answer_key_section_html(
+            content += generate_answer_key_section_html(
                 section, module, questions_dict, question_ids
             )
 
-    html_content += "</body>\n</html>"
+    html_content = template.substitute(
+        paper_size=get_paper_size_value(paper_size),
+        document_title="SAT Questions - Answer Key & Explanations",
+        content=content
+    )
+
     return html_content
 
 

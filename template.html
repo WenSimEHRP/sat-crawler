@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAT Questions</title>
+    <title>${document_title}</title>
     <style>
         body {
             font-family: "Noto Serif", serif;
@@ -254,7 +254,7 @@
 
             @page {
                 margin: 0.8cm;
-                size: A4;
+                size: ${paper_size};
             }
 
             p {
@@ -287,7 +287,8 @@
 </head>
 
 <body>
-    <h1>SAT Questions</h1>
+    <h1>${document_title}</h1>
+    ${content}
 </body>
 
 </html>
