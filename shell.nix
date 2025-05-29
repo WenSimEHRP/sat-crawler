@@ -9,7 +9,6 @@ mkShell {
     python313Packages.types-tqdm
     python313Packages.pandas
     python313Packages.weasyprint
-    python313Packages.pyside6
     noto-fonts
   ];
 }
