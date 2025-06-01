@@ -1,10 +1,15 @@
-# SAT Questions Crawler
+# SAT Questions Crawler/Generator
 
-Simple yet _worksful_ question crawler.
-Fetched data is available in json and cbor formats.
-Use at your own risk.
+- Simple yet _worksful_ SAT question crawler.
+- Fetches questions and generates a full-length practice test.
+- **Use at your own risk. I do not provide warranty of any kind.**
+
+Use the questions from github releases to prevent harassing College Board servers.
+Again, **use at your own risk.**
 
 ## Usage
+
+Use `./make_pdf.py --help` for potentially undocumented features.
 
 - Fetching questions: `crawl.py`
 - Randomly select questions & make html/pdf output: `make_pdf.py`
@@ -30,12 +35,10 @@ Use at your own risk.
 
 ## Installing Dependencies
 
-### UNIX/Linux/MacOS/Windows
-
 For pdf and html appearance consistency, please install the font [`noto-serif`](https://fonts.google.com/noto/specimen/Noto+Serif).
 
 Install dependencies via `pip3 install -r requirements.txt`.
 
-### Using Nix/NixOS
+### Using Nix
 
 Use `nix-shell` to enter the development environment.
