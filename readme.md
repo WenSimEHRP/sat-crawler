@@ -9,27 +9,46 @@ Again, **use at your own risk.**
 
 ## Usage
 
-Use `./make_pdf.py --help` for potentially undocumented features.
+Use `./make_html.py --help` for potentially undocumented features.
+
+> [!IMPORTANT]
+> To generate a PDF, open the generated `.html` file, use your browser's
+> "print" option (usually accessible using the shortcut `<ctrl>` + `p`),
+> then choose "Print to PDF" or "Save to PDF", depending on what the print
+> menu provides, and select your desired paper size.
+>
+> Some "Print to PDF" or "Save to PDF" services might automatically add extra
+> information in the generated PDF output. Usually there would be an option
+> in your browser's print window to hide those unwanted info.
+
+> [!IMPORTANT]
+> The PDF generated will use `letter` paper size by default. If you wish to
+> change the paper size, change the following CSS code in either `template.html`
+> or your generated output.
+>
+> ```svg
+> @page {
+>   margin: 0.8cm;
+>   size: <YOUR OPTION OF PAPER>;
+>   /* change <YOUR OPTION TO PAPER> to the paper size you want */
+> }
+> ```
 
 - Fetching questions: `crawl.py`
-- Randomly select questions & make html/pdf output: `make_pdf.py`
-  - Specify paper size using `--paper-size`. This by default uses us-letter.
+- Randomly select questions & make html/pdf output: `make_html.py`
   - Specify output file name using `--output`.
   - Answers:
     - `--answers-only`: only generate the answers html/pdf.
     - `--no-answers`: don't generate any answers.
 
 - Examples:
-  - `./make_pdf.py --paper-size letter --output questions --no-answers`
-    - Set paper size to letter.
+  - `./make_html.py --output questions --no-answers`
     - Set output prefix to "questions".
     - Don't generate answers.
-  - `./make_pdf.py --paper-size a4 --output abcde --answers-only`
-    - Set paper size to A4.
+  - `./make_html.py --output abcde --answers-only`
     - Set output prefix to "abcde".
     - Only generate answers.
-  - `./make_pdf.py`
-    - Default paper size (letter).
+  - `./make_html.py`
     - Default output prefix (questions).
     - Generate answers _and_ questions.
 

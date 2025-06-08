@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
-from typing import Any, Union, List, Dict, Literal, Optional
+from typing import Any, Union, List, Dict, Optional
 import json
-import weasyprint
 import argparse
 from make_module import make_module
 from string import Template
-
-# Paper size type definition
-PaperSize = Literal["us-letter", "a4", "legal", "a3"]
 
 
 def load_questions_data() -> Dict[Any, Any]:
@@ -20,12 +16,6 @@ def load_template() -> Template:
     """Load the main HTML template"""
     with open("template.html", "r", encoding="utf-8") as f:
         return Template(f.read())
-
-
-def get_paper_size_value(paper_size: PaperSize) -> str:
-    """Get CSS paper size value"""
-    size_mapping = {"us-letter": "letter", "a4": "A4", "legal": "legal", "a3": "A3"}
-    return size_mapping[paper_size]
 
 
 def get_correct_answer(details: Union[List[Dict[str, Any]], Dict[str, Any]]) -> str:
@@ -204,7 +194,6 @@ def generate_questions_and_keys(
 def generate_html_content(
     questions_dict: Dict[Any, Any],
     cached_questions: Dict[str, Dict[int, List[str]]],
-    paper_size: PaperSize = "us-letter",
 ) -> str:
     """Generate complete HTML content for questions only"""
     template = load_template()
@@ -218,7 +207,6 @@ def generate_html_content(
             )
 
     html_content = template.substitute(
-        paper_size=get_paper_size_value(paper_size),
         document_title="SAT Questions",
         content=content,
     )
@@ -229,7 +217,6 @@ def generate_html_content(
 def generate_answer_key_html_content(
     questions_dict: Dict[Any, Any],
     cached_questions: Dict[str, Dict[int, List[str]]],
-    paper_size: PaperSize = "us-letter",
 ) -> str:
     """Generate complete HTML content for answer key with explanations using cached question IDs"""
     template = load_template()
@@ -243,7 +230,6 @@ def generate_answer_key_html_content(
             )
 
     html_content = template.substitute(
-        paper_size=get_paper_size_value(paper_size),
         document_title="SAT Questions - Answer Key & Explanations",
         content=content,
     )
@@ -257,23 +243,6 @@ def write_html_file(html_content: str, filename: str = "questions.html") -> None
         html_file.write(html_content)
 
 
-def generate_pdf(
-    html_filename: str = "questions.html", pdf_filename: str = "questions.pdf"
-) -> None:
-    """Generate PDF from HTML content"""
-    weasyprint.HTML(html_filename).write_pdf(pdf_filename)
-
-
-def validate_paper_size(paper_size: str) -> PaperSize:
-    """Validate and return paper size"""
-    valid_sizes: List[PaperSize] = ["us-letter", "a4", "legal", "a3"]
-    if paper_size not in valid_sizes:
-        raise ValueError(
-            f"Invalid paper size. Must be one of: {', '.join(valid_sizes)}"
-        )
-    return paper_size  # type: ignore
-
-
 def main(
     paper_size: str = "us-letter",
     output: str = "questions",
@@ -283,16 +252,11 @@ def main(
 ) -> None:
     """Main function to generate HTML and PDF files"""
 
-    # Validate paper size
-    validated_paper_size: PaperSize = validate_paper_size(paper_size)
-
     # Generate filenames
     questions_html_filename = f"{output}.html"
     questions_pdf_filename = f"{output}.pdf"
     answers_html_filename = f"{output}_answers.html"
     answers_pdf_filename = f"{output}_answers.pdf"
-
-    print(f"Paper size: {validated_paper_size}")
 
     # Load questions data
     questions_dict: Dict[Any, Any] = load_questions_data()
@@ -310,10 +274,9 @@ def main(
         )
 
         questions_html_content = generate_html_content(
-            questions_dict, cached_questions, validated_paper_size
+            questions_dict, cached_questions
         )
         write_html_file(questions_html_content, questions_html_filename)
-        generate_pdf(questions_html_filename, questions_pdf_filename)
 
         print("Questions PDF generated successfully!")
 
@@ -322,10 +285,9 @@ def main(
         print(f"Generating answer key: {answers_html_filename}, {answers_pdf_filename}")
 
         answers_html_content = generate_answer_key_html_content(
-            questions_dict, cached_questions, validated_paper_size
+            questions_dict, cached_questions
         )
         write_html_file(answers_html_content, answers_html_filename)
-        generate_pdf(answers_html_filename, answers_pdf_filename)
 
         print("Answer key PDF generated successfully!")
 

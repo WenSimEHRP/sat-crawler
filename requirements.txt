@@ -1,7 +1,5 @@
 requests
 types-requests
-cbor2
 tqdm
 types-tqdm
 pandas
-weasyprint
