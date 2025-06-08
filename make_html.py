@@ -250,13 +250,11 @@ def main(
     no_answers: bool = False,
     questions: Optional[Dict[str, Dict[int, List[str]]]] = None,
 ) -> None:
-    """Main function to generate HTML and PDF files"""
+    """Main function to generate HTML file"""
 
     # Generate filenames
     questions_html_filename = f"{output}.html"
-    questions_pdf_filename = f"{output}.pdf"
     answers_html_filename = f"{output}_answers.html"
-    answers_pdf_filename = f"{output}_answers.pdf"
 
     # Load questions data
     questions_dict: Dict[Any, Any] = load_questions_data()
@@ -268,9 +266,9 @@ def main(
         cached_questions = questions
 
     if not answers_only:
-        # Generate questions PDF
+        # Generate questions HTML
         print(
-            f"Generating questions: {questions_html_filename}, {questions_pdf_filename}"
+            f"Generating questions: {questions_html_filename}"
         )
 
         questions_html_content = generate_html_content(
@@ -278,32 +276,25 @@ def main(
         )
         write_html_file(questions_html_content, questions_html_filename)
 
-        print("Questions PDF generated successfully!")
+        print("Questions HTML generated successfully!")
 
     if not no_answers:
-        # Generate answer key PDF using the same question IDs
-        print(f"Generating answer key: {answers_html_filename}, {answers_pdf_filename}")
+        # Generate answer key HTML using the same question IDs
+        print(f"Generating answer key: {answers_html_filename}")
 
         answers_html_content = generate_answer_key_html_content(
             questions_dict, cached_questions
         )
         write_html_file(answers_html_content, answers_html_filename)
 
-        print("Answer key PDF generated successfully!")
+        print("Answer key HTML generated successfully!")
 
     print("All files generated successfully!")
 
 
 def cli_main() -> None:
     """CLI entry point that parses arguments and calls main()"""
-    parser = argparse.ArgumentParser(description="Generate SAT Questions PDF")
-    parser.add_argument(
-        "--paper-size",
-        type=str,
-        default="us-letter",
-        choices=["us-letter", "a4", "legal", "a3"],
-        help="Paper size for PDF generation (default: us-letter)",
-    )
+    parser = argparse.ArgumentParser(description="Generate SAT Questions HTML")
     parser.add_argument(
         "--output",
         type=str,
@@ -311,12 +302,12 @@ def cli_main() -> None:
         help="Output filename prefix (default: questions)",
     )
     parser.add_argument(
-        "--answers-only", action="store_true", help="Generate only the answer key PDF"
+        "--answers-only", action="store_true", help="Generate only the answer key HTML"
     )
     parser.add_argument(
         "--no-answers",
         action="store_true",
-        help="Generate only the questions PDF (no answer key)",
+        help="Generate only the questions HTML (no answer key)",
     )
 
     args = parser.parse_args()

@@ -5,4 +5,3 @@
 *.html
 !template.html
 __pycache__
-make_pdf.py
