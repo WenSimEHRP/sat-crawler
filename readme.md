@@ -1,13 +1,7 @@
-# SAT Questions Crawler/Generator
+![image](./sat-crawler.png)
 
-- Simple yet _worksful_ SAT question crawler.
-- Fetches questions and generates a full-length practice test.
-- **Use at your own risk. I do not provide warranty of any kind.**
-
-Use the questions from github releases to prevent harassing College Board servers.
-Again, **use at your own risk.**
-
-## Usage
+- `crawl.py` - download test data
+- `make_html.py` - generate the HTML practice test
 
 Use `./make_html.py --help` for potentially undocumented features.
 
