@@ -20,6 +20,11 @@ Use `./make_html.py --help` for potentially undocumented features.
 > Some "Print to PDF" or "Save to PDF" services might automatically add extra
 > information in the generated PDF output. Usually there would be an option
 > in your browser's print window to hide those unwanted info.
+>
+> Note that when using a non-Chromium based browser (e.g. Firefox), the page
+> numbers on the bottom of each page in the PDF may not show up correctly.
+> In this case you may want to install a chromium based browser
+> (e.g. MS Edge, Google Chrome, Chromium) to get the correct output.
 
 > [!IMPORTANT]
 > The PDF generated will use `letter` paper size by default. If you wish to

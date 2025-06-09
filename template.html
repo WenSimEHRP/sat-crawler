@@ -255,6 +255,12 @@
             @page {
                 margin: 0.8cm;
                 size: letter;
+                /* This would not work with Firefox! */
+                @bottom-center {
+                    content: counter(page) "/" counter(pages);
+                    font-size: 12pt;
+                    color: #000;
+                }
             }
 
             p {
@@ -266,6 +272,7 @@
                 margin: 3px 0;
             }
         }
+
         .answer-key {
             background-color: #e8f5e8;
             border: 1px solid #4caf50;
