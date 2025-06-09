@@ -20,19 +20,6 @@ Use `./make_html.py --help` for potentially undocumented features.
 > In this case you may want to install a chromium based browser
 > (e.g. MS Edge, Google Chrome, Chromium) to get the correct output.
 
-> [!IMPORTANT]
-> The PDF generated will use `letter` paper size by default. If you wish to
-> change the paper size, change the following CSS code in either `template.html`
-> or your generated output.
->
-> ```svg
-> @page {
->   margin: 0.8cm;
->   size: <YOUR OPTION OF PAPER>;
->   /* change <YOUR OPTION TO PAPER> to the paper size you want */
-> }
-> ```
-
 - Fetching questions: `crawl.py`
 - Randomly select questions & make html/pdf output: `make_html.py`
   - Specify output file name using `--output`.
