@@ -32,7 +32,7 @@ def get_correct_answer(details: Union[List[Dict[str, Any]], Dict[str, Any]]) -> 
         elif "correct_answer" in details:
             return ", ".join(details["correct_answer"])
 
-    return "<em>N/A; check explanation for more info</em>"
+    return "<em>(Refer to explanation)</em>"
 
 
 def get_answer_explanation(details: Union[List[Dict[str, Any]], Dict[str, Any]]) -> str:
@@ -219,7 +219,7 @@ def generate_answer_summary_table(
     cached_questions: Dict[str, Dict[int, List[str]]],
 ) -> str:
     """Generate a summary table of all correct answers"""
-    html_content = '<div class="answer-summary"><h2>Answer Summary</h2>\n'
+    html_content = '<div class="answer-summary">\n'
 
     for section in ["reading", "math"]:
         html_content += f'<div class="section-summary"><h3>{section.capitalize()} Section</h3>\n'
@@ -230,8 +230,8 @@ def generate_answer_summary_table(
             html_content += '<table class="answer-summary-table">\n'
             html_content += '<thead>\n'
             html_content += '<tr>\n'
-            html_content += '<th class="question-number-header">Question</th>\n'
-            html_content += '<th class="question-id-header">Question ID</th>\n'
+            html_content += '<th class="question-number-header">No.</th>\n'
+            html_content += '<th class="question-id-header">ID</th>\n'
             html_content += '<th class="answer-header">Answer</th>\n'
             html_content += '</tr>\n'
             html_content += '</thead>\n'

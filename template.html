@@ -255,6 +255,7 @@
             @page {
                 margin: 0.8cm;
                 size: letter;
+
                 /* This would not work with Firefox! */
                 @bottom-center {
                     content: counter(page) "/" counter(pages);
@@ -296,20 +297,9 @@
             margin-bottom: 20px;
         }
 
-        .answer-summary h2 {
-            color: #0056b3;
-            text-align: center;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 8px;
-            font-size: 1.4em;
-        }
-
         .section-summary {
-            margin-bottom: 15px;
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
         }
 
         .section-summary h3 {
@@ -337,7 +327,6 @@
             margin-bottom: 10px;
             background-color: white;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            font-size: 0.85em;
         }
 
         .answer-summary-table th {
@@ -347,14 +336,12 @@
             text-align: center;
             font-weight: bold;
             border: 1px solid #ddd;
-            font-size: 0.85em;
         }
 
         .answer-summary-table td {
             padding: 4px 3px;
             text-align: center;
             border: 1px solid #ddd;
-            font-size: 0.8em;
         }
 
         .answer-row:nth-child(even) {
@@ -363,35 +350,21 @@
 
         .question-number {
             font-weight: bold;
-            width: 50px;
+            width: max-content;
         }
 
         .question-id {
             font-family: monospace;
-            font-size: 0.75em;
-            color: #666;
-            width: 80px;
+            width: max-content;
         }
 
         .correct-answer {
-            font-weight: bold;
-            color: #2e7d32;
-            width: 50px;
+            width: 1fr;
         }
 
         @media print {
             .answer-summary {
                 margin-bottom: 15px;
-            }
-
-            .answer-summary h2 {
-                color: black;
-                font-size: 12pt;
-                margin-bottom: 10px;
-                border-bottom: 1px solid #999;
-                padding-bottom: 6px;
-                page-break-before: always;
-                text-align: center;
             }
 
             .section-summary {
@@ -405,6 +378,7 @@
                 color: black;
                 font-size: 11pt;
                 margin-bottom: 6px;
+                page-break-before: always;
                 page-break-after: avoid;
                 width: 100%;
             }
@@ -447,27 +421,20 @@
                 background-color: #f8f8f8;
             }
 
-            .question-id {
-                color: black;
-                font-size: 6pt;
-            }
-
-            .correct-answer {
-                color: black;
-                font-weight: bold;
-            }
-
             .question-number {
-                width: 30px;
+                font-weight: bold;
+                width: max-content;
             }
 
             .question-id {
-                width: 60px;
+                font-family: monospace;
+                width: max-content;
             }
 
             .correct-answer {
-                width: 30px;
+                width: 1fr;
             }
+
         }
     </style>
 </head>
