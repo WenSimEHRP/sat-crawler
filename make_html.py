@@ -214,6 +214,49 @@ def generate_html_content(
     return html_content
 
 
+def generate_answer_summary_table(
+    questions_dict: Dict[Any, Any],
+    cached_questions: Dict[str, Dict[int, List[str]]],
+) -> str:
+    """Generate a summary table of all correct answers"""
+    html_content = '<div class="answer-summary"><h2>Answer Summary</h2>\n'
+
+    for section in ["reading", "math"]:
+        html_content += f'<div class="section-summary"><h3>{section.capitalize()} Section</h3>\n'
+
+        for module in [1, 2]:
+            question_ids = cached_questions[section][module]
+            html_content += f'<div class="module-summary"><h4>Module {module}</h4>\n'
+            html_content += '<table class="answer-summary-table">\n'
+            html_content += '<thead>\n'
+            html_content += '<tr>\n'
+            html_content += '<th class="question-number-header">Question</th>\n'
+            html_content += '<th class="question-id-header">Question ID</th>\n'
+            html_content += '<th class="answer-header">Answer</th>\n'
+            html_content += '</tr>\n'
+            html_content += '</thead>\n'
+            html_content += '<tbody>\n'
+
+            for i, question_id in enumerate(question_ids):
+                details = questions_dict.get(question_id, {}).get("details", {})
+                correct_answer = get_correct_answer(details)
+                html_content += '<tr class="answer-row">\n'
+                html_content += f'<td class="question-number">{i + 1}</td>\n'
+                html_content += f'<td class="question-id">{question_id}</td>\n'
+                html_content += f'<td class="correct-answer">{correct_answer}</td>\n'
+                html_content += '</tr>\n'
+
+            html_content += '</tbody>\n'
+            html_content += '</table>\n'
+            html_content += '</div>\n'  # Close module-summary
+
+        html_content += '</div>\n'  # Close section-summary
+
+    html_content += '</div>\n'  # Close answer-summary
+    html_content += '<div style="page-break-after: always;"></div>\n'
+    return html_content
+
+
 def generate_answer_key_html_content(
     questions_dict: Dict[Any, Any],
     cached_questions: Dict[str, Dict[int, List[str]]],
@@ -221,7 +264,10 @@ def generate_answer_key_html_content(
     """Generate complete HTML content for answer key with explanations using cached question IDs"""
     template = load_template()
 
-    content = ""
+    # Start with answer summary table
+    content = generate_answer_summary_table(questions_dict, cached_questions)
+
+    # Add detailed answers and explanations
     for section in ["reading", "math"]:
         for module in [1, 2]:
             question_ids = cached_questions[section][module]
@@ -244,7 +290,6 @@ def write_html_file(html_content: str, filename: str = "questions.html") -> None
 
 
 def main(
-    paper_size: str = "us-letter",
     output: str = "questions",
     answers_only: bool = False,
     no_answers: bool = False,
@@ -314,7 +359,6 @@ def cli_main() -> None:
 
     # Call main with parsed arguments
     main(
-        paper_size=args.paper_size,
         output=args.output,
         answers_only=args.answers_only,
         no_answers=args.no_answers,
